@@ -1,56 +1,26 @@
 import React from "react";
+import { WrappedButton } from "./Button";
 
-class Start extends React.Component {
-  render() {
-    return (
-      <div id="start" className="screen visibility-hidden">
-        <div className="middle">
-          <div className="middle-content">
-            {/* <tgs-player
-              data-name="start"
-              src="assets/lottie/intro.tgs"
-              width={120}
-              height={120}
-              className="screen-lottie"
-            ></tgs-player> */}
-            <div className="screen-title">TON Wallet</div>
-            <div className="screen-text">
-              TON wallet allows you to make fast and
-              <br />
-              secure blockchain-based payments
-              <br />
-              without intermediaries.
-            </div>
-            <div className="mt-95">
-              <button id="start_createBtn" className="btn-blue screen-btn">
-                Create My Wallet
-              </button>
-            </div>
-            <div className="mt-20">
-              <button
-                id="start_importBtn"
-                className="btn-lite font-weight-normal"
-              >
-                Import existing wallet
-              </button>
-            </div>
-            <div className="mt-10">
-              <button
-                id="start_importLedgerHidBtn"
-                className="btn-lite font-weight-normal"
-              >
-                Connect Ledger
-              </button>
-            </div>
-            {}
-            {}
-            {}
-            {}
-          </div>
+import { ScreenText } from "./ScreenText";
+import { ScreenTitle } from "./ScreenTitle";
+
+import { START_SCREEN_TEXT, START_SCREEN_TITLE } from "./text/constants";
+
+function Start() {
+  return (
+    <div id="start" className="screen visibility-hidden">
+      <div className="middle">
+        <div className="middle-content">
+          <ScreenTitle text={START_SCREEN_TITLE} />
+          <ScreenText text={START_SCREEN_TEXT} />
+          <WrappedButton id="start_createBtn" text="Create My Wallet" outerClassName="mt-95" innerClassName="btn-blue screen-btn" />
+          <WrappedButton id="start_importBtn" text="Import existing wallet" outerClassName="mt-20" innerClassName="btn-lite font-weight-normal" />
+          <WrappedButton id="start_importLedgerBtn" text="Connect Ledger" outerClassName="mt-10" innerClassName="btn-lite font-weight-normal" />
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 }
+
 
 export default Start;

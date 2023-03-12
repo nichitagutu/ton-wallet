@@ -1,4 +1,7 @@
 import React from "react";
+import { WrappedButton } from "./Button";
+import { ScreenText } from "./ScreenText";
+import { ScreenTitle } from "./ScreenTitle";
 
 class ReadyToGo extends React.Component {
   render() {
@@ -6,29 +9,9 @@ class ReadyToGo extends React.Component {
       <div id="readyToGo" className="screen visibility-hidden">
         <div className="middle">
           <div className="middle-content">
-            {/* <tgs-player
-              data-name="readyToGo"
-              src="assets/lottie/done.tgs"
-              width={120}
-              height={120}
-              className="screen-lottie"
-            ></tgs-player> */}
-            <div className="screen-title">Ready to go!</div>
-            <div className="screen-text">
-              You're all set. Now you have a wallet that
-              <br />
-              only you control - directly, without
-              <br />
-              middlemen or bankers.
-            </div>
-            <div>
-              <button
-                id="readyToGo_continueBtn"
-                className="btn-blue screen-btn mt-170 mb-20"
-              >
-                View My Wallet
-              </button>
-            </div>
+            <ScreenTitle text="Ready to go!" />
+            <ScreenText text="You're all set. Now you have a wallet that<br/>only you control - directly, without<br/>middlemen or bankers." />
+            <WrappedButton id='readyToGo_continueBtn' text='View My Wallet' innerClassName='btn-blue screen-btn mt-170 mb-20' />
           </div>
         </div>
       </div>

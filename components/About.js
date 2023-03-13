@@ -14,16 +14,6 @@ class About extends React.Component {
           {"{"}VERSION{"}"}
           {"}"}
         </div>
-
-        {/* <LottiePlayer.LottiePlayer
-          autoplay
-          controls
-          loop
-          mode="normal"
-          src="assets/lottie/intro.tgs"
-          style="width: 150px; height: 150px;"
-        >
-        </LottiePlayer.LottiePlayer> */}
         <div className="popup-grey-text line-height-24">
           API provider:{" "}
           <a href="https://toncenter.com" target="_blank">

@@ -1,9 +1,12 @@
 import storage from './util/storage.js';
 
-let extensionWindowId = -1;
+// import TonWeb from 'tonweb';
+
 let contentScriptPorts = new Set();
 let popupPort = null;
 const queueToPopup = [];
+
+const TONCENTER_API_KEY_WEB_MAIN = '3399310a6ffd91b86c6cddde566ad69928a85dec151e68529d0478be980c73b7';
 
 let dAppPromise = null;
 
@@ -26,31 +29,6 @@ const createDappPromise = () => {
         reject(...args);
         dAppPromise = null;
     };
-};
-
-const showExtensionWindow = () => {
-    return new Promise(async resolve => {
-        if (extensionWindowId > -1) {
-            chrome.windows.update(extensionWindowId, { focused: true });
-            return resolve();
-        }
-
-        const windowState = (await storage.getItem('windowState')) || {};
-
-        windowState.top = windowState.top || 0;
-        windowState.left = windowState.left || 0;
-        windowState.height = windowState.height || 800;
-        windowState.width = windowState.width || 480;
-
-        chrome.windows.create(Object.assign(windowState, {
-            url: 'index.html',
-            type: 'popup',
-            focused: true
-        }), window => {
-            extensionWindowId = window.id;
-            resolve();
-        });
-    });
 };
 
 const BN = TonWeb.utils.BN;
@@ -113,8 +91,6 @@ async function decrypt(ciphertext, password) {
 }
 
 // CONTROLLER
-
-const IS_EXTENSION = !!(self.chrome && chrome.runtime && chrome.runtime.onConnect);
 
 const ACCOUNT_NUMBER = 0;
 
@@ -205,8 +181,8 @@ class Controller {
         return new Promise(async (resolve) => {
             await storage.removeItem('pwdHash');
 
-            this.isTestnet = IS_EXTENSION ? (await storage.getItem('isTestnet')) : (self.location.href.indexOf('testnet') > -1);
-            this.isDebug = IS_EXTENSION ? (await storage.getItem('isDebug')) : (self.location.href.indexOf('debug') > -1);
+            this.isTestnet = (self.location.href.indexOf('testnet') > -1);
+            this.isDebug = (self.location.href.indexOf('debug') > -1);
 
             const mainnetRpc = 'https://toncenter.com/api/v2/jsonRPC';
             const testnetRpc = 'https://testnet.toncenter.com/api/v2/jsonRPC';
@@ -214,15 +190,12 @@ class Controller {
             const apiKey = this.isTestnet
                 ? TONCENTER_API_KEY_WEB_TEST
                 : TONCENTER_API_KEY_WEB_MAIN;
-            const extensionApiKey = this.isTestnet
-                ? TONCENTER_API_KEY_EXT_TEST
-                : TONCENTER_API_KEY_EXT_MAIN;
 
-            if (IS_EXTENSION && !(await storage.getItem('address'))) {
+            if (!(await storage.getItem('address'))) {
                 await this._restoreDeprecatedStorage();
             }
 
-            this.ton = new TonWeb(new TonWeb.HttpProvider(this.isTestnet ? testnetRpc : mainnetRpc, {apiKey: IS_EXTENSION ? extensionApiKey : apiKey}));
+            this.ton = new TonWeb(new TonWeb.HttpProvider(this.isTestnet ? testnetRpc : mainnetRpc, {apiKey: apiKey}));
             this.myAddress = await storage.getItem('address');
             this.publicKeyHex = await storage.getItem('publicKey');
 
@@ -1128,8 +1101,6 @@ class Controller {
 
     requestPublicKey(needQueue) {
         return new Promise(async (resolve, reject) => {
-            await showExtensionWindow();
-
             this.afterEnterPassword = async words => {
                 const privateKey = await Controller.wordsToPrivateKey(words);
                 const keyPair = nacl.sign.keyPair.fromSeed(TonWeb.utils.base64ToBytes(privateKey));
@@ -1170,7 +1141,6 @@ class Controller {
                 return (this.balance ? this.balance.toString() : '');
             case 'ton_sendTransaction':
                 const param = params[0];
-                await showExtensionWindow();
 
                 if (param.data) {
                     if (param.dataType === 'hex') {
@@ -1196,84 +1166,12 @@ class Controller {
                 return result;
             case 'ton_rawSign':
                 const signParam = params[0];
-                await showExtensionWindow();
 
                 return this.showSignConfirm(signParam.data, needQueue);
             case 'flushMemoryCache':
-                await chrome.webRequest.handlerBehaviorChanged();
                 return true;
         }
     }
 }
 
 const controller = new Controller();
-
-if (IS_EXTENSION) {
-    chrome.runtime.onConnect.addListener(port => {
-        if (port.name === 'gramWalletContentScript') {
-            contentScriptPorts.add(port)
-            port.onMessage.addListener(async (msg, port) => {
-                if (msg.type === 'gramWalletAPI_ton_provider_connect') {
-                    controller.whenReady.then(() => {
-                        controller.initDapp();
-                    });
-                }
-
-                if (!msg.message) return;
-
-                const result = await controller.onDappMessage(msg.message.method, msg.message.params);
-                if (port) {
-                    port.postMessage(JSON.stringify({
-                        type: 'gramWalletAPI',
-                        message: {jsonrpc: '2.0', id: msg.message.id, method: msg.message.method, result}
-                    }));
-                }
-            });
-            port.onDisconnect.addListener(port => {
-                contentScriptPorts.delete(port)
-            })
-        } else if (port.name === 'gramWalletPopup') {
-            popupPort = port;
-            popupPort.onMessage.addListener(function (msg) {
-                if (msg.method === 'response') {
-                    const resolver = controller.pendingMessageResolvers.get(msg.id);
-                    if (resolver) {
-                        resolver(msg.result);
-                        controller.pendingMessageResolvers.delete(msg.id);
-                    }
-                } else {
-                    controller.onViewMessage(msg.method, msg.params);
-                }
-            });
-            popupPort.onDisconnect.addListener(() => {
-                popupPort = null;
-            });
-
-            const runQueueToPopup = () => {
-                queueToPopup.forEach(msg => popupPort.postMessage(msg));
-                queueToPopup.length = 0;
-            };
-
-            if (!controller.myAddress) { // if controller not initialized yet
-                runQueueToPopup();
-            }
-
-            controller.whenReady.then(async () => {
-                await controller.initView();
-                runQueueToPopup();
-            });
-        }
-    });
-
-    let actionApiName = 'action';
-    if (chrome.runtime.getManifest().manifest_version === 2) actionApiName = 'browserAction';
-
-    chrome[actionApiName].onClicked.addListener(showExtensionWindow);
-
-    chrome.windows.onRemoved.addListener(removedWindowId => {
-        if (dAppPromise) dAppPromise.resolve(false);
-
-        if (removedWindowId !== extensionWindowId) return;
-        extensionWindowId = -1;
-    });
-}

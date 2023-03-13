@@ -13,10 +13,16 @@ import {
     triggerClass
 } from "./Utils.js";
 
+// import TonWeb from 'tonweb';
+// import QRCode from 'easyqrcodejs';
+
 import {initLotties, toggleLottie, lotties} from "./Lottie.js";
 import DropDown from "./DropDown.js";
 
-const IS_EXTENSION = !!(self.chrome && chrome.runtime && chrome.runtime.onConnect);
+// import TonWeb from '../../libs/tonweb.min.js';
+
+console.log('TonWeb', TonWeb);
+console.log("TonWeb.utils", TonWeb.utils);
 
 const toNano = TonWeb.utils.toNano;
 const formatNanograms = TonWeb.utils.fromNano;
@@ -561,6 +567,7 @@ class View {
     // IMPORT && CONFIRM SCREENS
 
     createWordInputs(params) {
+        console.log(params)
 
         const onEnter = input => {
             const i = Number(input.getAttribute('tabindex'));
@@ -667,7 +674,6 @@ class View {
             input.addEventListener('keydown', onKeyDown);
             input.addEventListener('paste', onPaste);
             onInput(input, onWordInput);
-
             $(params.containerId).appendChild(inputContainer);
         };
 
@@ -1202,56 +1208,10 @@ class View {
         }
     }
 }
-
+console.log(TonWeb.mnemonic)
 window.view = new View(TonWeb.mnemonic.wordlists.EN);
 
-if (IS_EXTENSION) {
-    let port;
-
-    const connectToBackground = () => {
-        port = chrome.runtime.connect({ name: 'gramWalletPopup' });
-        window.view.port = port;
-
-        port.onMessage.addListener(data => {
-            const result = window.view.onMessage(data.method, data.params);
-            if (result && data.id) {
-                port.postMessage({ method: 'response', id: data.id, result });
-            }
-        });
-
-        port.onDisconnect.addListener(() => {
-            connectToBackground();
-        });
-    }
-
-    connectToBackground();
-
-    (async () => {
-        let prevWindow = await chrome.windows.getCurrent();
-
-        setInterval(async () => {
-            const currentWindow = await chrome.windows.getCurrent();
-
-            if (
-                currentWindow.top === prevWindow.top &&
-                currentWindow.left === prevWindow.left &&
-                currentWindow.height === prevWindow.height &&
-                currentWindow.width === prevWindow.width
-            ) return;
-
-            window.view.sendMessage('onWindowUpdate', {
-                top: currentWindow.top,
-                left: currentWindow.left,
-                height: currentWindow.height,
-                width: currentWindow.width
-            });
-
-            prevWindow = currentWindow;
-        }, 3000);
-    })();
-}
-
-if (window.top == window && window.console) {
+if (window.top === window && window.console) {
     const selfXssAttentions = {
         'ru-RU': ['Внимание!', 'Используя эту консоль, вы можете подвергнуться атаке Self-XSS, что позволит злоумышленникам завладеть вашим кошельком.\nНе вводите и не вставляйте программный код, который не понимаете.'],
         '*': ['Attention!', 'Using this console, you can be exposed to a Self-XSS attack, allowing attackers to take over your wallet.\nDo not enter or paste program code that you do not understand.']

@@ -17,6 +17,8 @@
   },
   "dependencies": {
     "@lottiefiles/lottie-player": "^1.7.1",
-    "html-to-react-components": "^1.6.6"
+    "easyqrcodejs": "^4.4.13",
+    "html-to-react-components": "^1.6.6",
+    "tonweb": "^0.0.60"
   }
 }

@@ -1033,11 +1033,27 @@ button {
 }
 
 .popup-footer {
-	display: flex;
+	display: flex !important;
 	align-items: center;
 	justify-content: space-between;
 	gap: 30px;
 	margin-top: 10px;
+}
+
+/* width */
+::-webkit-scrollbar {
+width: 6px;
+}
+  
+/* Track */
+::-webkit-scrollbar-track {
+border-radius: 10px;
+}
+  
+/* Handle */
+::-webkit-scrollbar-thumb {
+background: rgb(128, 126, 126);
+border-radius: 10px;
 }
 
 .popup .btn-blue {

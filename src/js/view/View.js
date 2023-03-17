@@ -113,7 +113,8 @@ class View {
         }
 
         $('#toWalletInput').addEventListener('paste', e => {
-            const urlString = getClipboardData(e);
+            const addressString = getClipboardData(e);
+            const urlString = "ton://transfer/" + addressString;
             let parsedTransferUrl;
             try {
                 parsedTransferUrl = TonWeb.utils.parseTransferUrl(urlString);
@@ -634,6 +635,8 @@ class View {
                 case 'ArrowDown':
                     dropdown.down();
                     break;
+                default:
+                    break;
             }
         };
 
@@ -1141,6 +1144,8 @@ class View {
                             this.setMyAddress(params.myAddress);
                         }
                         break;
+                    default:
+                        break;
                 }
                 break;
 
@@ -1188,6 +1193,8 @@ class View {
                         const hex = params.data.length > 48 ? params.data.substring(0, 47) + '…' : params.data;
                         setAddr($('#signConfirmData'), hex);
                         break;
+                    default:
+                        break;
                 }
                 break;
 
@@ -1204,6 +1211,9 @@ class View {
                 localStorage.clear();
 
                 return {address, words, walletVersion, magic, proxy};
+            default:
+                console.log('Unknown event', event, params);
+                break;
 
         }
     }
